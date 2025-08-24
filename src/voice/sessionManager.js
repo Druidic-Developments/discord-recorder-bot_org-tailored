@@ -154,20 +154,45 @@ export class RecordingSession extends EventEmitter {
     pcmStream.on('error', (e) => this.emit('error', e));
   }
 
-  async stopAndFinalize() {
-    if (this.ended) return;
-    this.ended = true;
-    this.clock.stop();
-    try {
-      this.connection?.destroy();
-    } catch {}
+async stopAndFinalize() {
+  if (this.ended) return;
+  this.ended = true;
 
-    // Finalize: encode and persist tracks
-    const results = [];
-    for (const [uid, w] of this.writers) {
-      const meta = await w.finalizeAndEncode({ sessionId: this.sessionId });
-      results.push({ userId: uid, username: w.username, ...meta, segments: w.segmentsMs(this.clock.frameMs) });
-    }
-    return results;
+  // 1) Mark the intended end frame *before* stopping the clock
+  const finalFrame = this.clock.nowFrames();
+
+  // 2) Stop the clock so no more writeTick happens
+  this.clock.stop();
+
+  // 3) Give prism/opus a short grace to push any buffered PCM into our queues
+  await new Promise(r => setTimeout(r, 200)); // ~10 frames
+
+  // 4) Stop receiving new audio
+  try { this.receiver?.speaking.removeAllListeners(); } catch {}
+  try { this.connection?.receiver?.subscriptions?.clear?.(); } catch {}
+
+  // 5) Drain all queued frames up to (finalFrame + small cushion)
+  const cushionFrames = Math.ceil(10 / (this.clock.frameMs)); // extra ~10ms worth, usually 1 frame
+  const flushTo = finalFrame + cushionFrames;
+  for (const [, w] of this.writers) {
+    w.drainTo(flushTo);
   }
+
+  // 6) Now it’s safe to tear down the connection
+  try { this.connection?.destroy(); } catch {}
+
+  // 7) Finalize & encode
+  const results = [];
+  for (const [uid, w] of this.writers) {
+    const meta = await w.finalizeAndEncode({ sessionId: this.sessionId });
+    results.push({
+      userId: uid,
+      username: w.username,
+      ...meta,
+      segments: w.segmentsMs(this.clock.frameMs),
+    });
+  }
+  return results;
+}
+
 }

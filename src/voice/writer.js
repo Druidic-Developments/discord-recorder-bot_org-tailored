@@ -18,6 +18,24 @@ export class UserWriter {
     this.framesQueue = new Map(); // frameIndex -> Buffer(PCM)
     this.present = false;
     this.consentActive = true;
+    // add to UserWriter class
+    currentFrame() {
+      return this.writer.writtenSamples / this.samplesPerFrame;
+    }
+
+    drainTo(targetFrame) {
+      // Write every frame up to targetFrame, pulling speech from the queue
+      for (let f = this.currentFrame(); f < targetFrame; f++) {
+        const speech = this.framesQueue.get(f);
+        if (speech) {
+          this.writer.writeSpeechFrame(speech);
+          this.framesQueue.delete(f);
+        } else {
+          this.writer.writeSilenceFrames(1);
+        }
+      }
+    }
+   
   }
 
   enqueueFrame(frameIndex, pcmFrame) {
