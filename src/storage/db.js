@@ -52,7 +52,7 @@ export const Session = {
       .run({ id, guildId, channelId, starterId, mode, policyHash, alignmentMode, retentionDays });
   },
   end(id) {
-    db.prepare('UPDATE sessions SET end_ts=datetime("now") WHERE id=?').run(id);
+    db.prepare("UPDATE sessions SET end_ts=datetime('now') WHERE id=?").run(id);
   },
   get(id) { return db.prepare('SELECT * FROM sessions WHERE id=?').get(id); },
   latestInGuild(guildId) {

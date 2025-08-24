@@ -1,24 +1,26 @@
 {
   "name": "discord-recorder-bot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Discord bot that records per-user aligned audio with strict consent, silence padding, and exportable manifests.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.12.0"
   },
   "main": "src/bot.js",
   "scripts": {
     "start": "node src/bot.js",
     "dev": "node --watch src/bot.js",
     "register": "node src/register-commands.js",
+    "deps": "node src/tools/voice-deps-report.js",
     "test": "vitest run"
   },
   "dependencies": {
-    "@discordjs/opus": "^0.9.0",
-    "@discordjs/voice": "^0.17.0",
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "^0.19.0",
+    "@snazzah/davey": "*",
     "archiver": "^7.0.1",
     "better-sqlite3": "^9.6.0",
-    "discord.js": "^14.15.3",
+    "discord.js": "^14.22.1",
     "dotenv": "^16.4.5",
     "fast-glob": "^3.3.2",
     "ffmpeg-static": "^5.2.0",
