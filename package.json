@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node src/bot.js",
     "dev": "node --watch src/bot.js",
-    "register": "node src/register-commands.js",
+    "register": "node register-commands-multi.js",
     "deps": "node src/tools/voice-deps-report.js",
     "test": "vitest run"
   },

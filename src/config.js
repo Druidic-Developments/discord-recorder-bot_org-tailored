@@ -17,6 +17,7 @@ export const CONFIG = {
   PAD_AFTER_OPTOUT: String(process.env.PAD_AFTER_OPTOUT || 'false').toLowerCase() === 'true',
 
   LOG_LEVEL: process.env.LOG_LEVEL || 'info'
+  
 };
 
 export function ensureDirs() {
