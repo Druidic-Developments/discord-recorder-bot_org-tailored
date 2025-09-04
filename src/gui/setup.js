@@ -1,5 +1,4 @@
 import { execSync, spawn } from 'child_process';
-import readline from 'node:readline/promises';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -30,24 +29,21 @@ function install(cmd, linux, mac, win) {
   }
 }
 
-export async function ensureSetup() {
-  if (!has('python3')) install('python3', 'python3', 'python@3', 'Python.Python.3');
+export function checkDependencies() {
+  if (!has('node')) install('node.js', 'nodejs', 'node', 'OpenJS.NodeJS');
   if (!has('ffmpeg')) install('ffmpeg', 'ffmpeg', 'ffmpeg', 'Gyan.FFmpeg');
+}
 
+export function needsSetup() {
   dotenv.config();
-  if (!process.env.DISCORD_TOKEN) {
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    console.log('\n--- Discord setup ---');
-    console.log('Visit https://discord.com/developers/applications to create a bot.');
-    const token = await rl.question('Paste your Bot token: ');
-    const guild = await rl.question('Paste an initial Guild ID: ');
-    const envPath = path.resolve('.env');
-    const env = `DISCORD_TOKEN=${token.trim()}\nGUILD_IDS=${guild.trim()}\n`;
-    writeFileSync(envPath, env);
-    rl.close();
-    dotenv.config();
-    console.log('[Setup] .env created.');
-  }
+  return !process.env.DISCORD_TOKEN;
+}
+
+export function saveCredentials(token, guild) {
+  const envPath = path.resolve('.env');
+  const env = `DISCORD_TOKEN=${token.trim()}\nGUILD_IDS=${guild.trim()}\n`;
+  writeFileSync(envPath, env);
+  dotenv.config();
 }
 
 export function appendGuildId(id) {

@@ -1,13 +1,14 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { ensureSetup, appendGuildId, openRecordingFolder, launchBot } from './setup.js';
+import { checkDependencies, needsSetup, saveCredentials, appendGuildId, openRecordingFolder, launchBot } from './setup.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let botProcess;
+let mainWindow;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -15,12 +16,19 @@ function createWindow() {
       contextIsolation: false
     }
   });
-  win.loadFile(path.join(__dirname, 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
-app.whenReady().then(async () => {
-  await ensureSetup();
+app.whenReady().then(() => {
   createWindow();
+  setTimeout(checkDependencies, 0);
+});
+
+ipcMain.handle('check-setup', () => needsSetup());
+
+ipcMain.on('save-credentials', (e, creds) => {
+  saveCredentials(creds.token, creds.guild);
+  e.sender.send('log', '[Setup] .env created\n');
 });
 
 ipcMain.on('add-guild', (e, id) => {
