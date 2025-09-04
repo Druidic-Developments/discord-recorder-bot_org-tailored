@@ -9,6 +9,9 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
 
 export async function execute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: 'Admins only (Manage Guild required).', ephemeral: true });
+  }
   const fmt = interaction.options.getString('format');
   const br = interaction.options.getInteger('bitrate');
   interaction.client.config.OUTPUT_FORMAT = fmt;

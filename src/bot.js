@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, Events } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { CONFIG, ensureDirs } from './config.js';
@@ -36,6 +36,7 @@ async function loadCommands() {
   const loaded = [];
   async function loadDir(dir) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ent.name.startsWith('_')) continue;
       const p = path.join(dir, ent.name);
       if (ent.isDirectory()) {
         await loadDir(p);
@@ -62,7 +63,7 @@ async function loadCommands() {
 }
 await loadCommands();
 
-client.once('ready', () => {
+client.once(Events.ClientReady, () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
   console.log('[Task] Starting retention task...');
   startRetentionTask();

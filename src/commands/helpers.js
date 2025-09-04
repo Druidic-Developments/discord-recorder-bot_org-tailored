@@ -17,3 +17,4 @@ export function isConsented(userId, guildId) {
 export function ensureNoActiveSession(interaction) {
   if (getSession(interaction.guildId)) throw new Error('A session is already active.');
 }
+

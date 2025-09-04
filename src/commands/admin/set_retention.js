@@ -8,6 +8,9 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
 
 export async function execute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: 'Admins only (Manage Guild required).', ephemeral: true });
+  }
   const days = interaction.options.getInteger('days');
   interaction.client.config.RETENTION_DAYS = days;
   await interaction.reply({ content: `Retention set to **${days}** day(s).`, ephemeral: true });

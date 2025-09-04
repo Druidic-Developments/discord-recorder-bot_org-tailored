@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Session } from '../../storage/db.js';
 import { CONFIG } from '../../config.js';
+import { safeJoin } from '../../utils/paths.js';
 
 export const data = new SlashCommandBuilder()
   .setName('export_session')
@@ -12,13 +13,24 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
 
 export async function execute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: 'Admins only (Manage Guild required).', ephemeral: true });
+  }
   const id = interaction.options.getString('session_id');
+  if (!/^[A-Za-z0-9_-]+$/.test(id)) {
+    return interaction.reply({ content: 'Invalid session id format.', ephemeral: true });
+  }
   await interaction.deferReply({ ephemeral: true });
 
   const session = Session.get(id);
   if (!session) return interaction.editReply('Session not found.');
 
-  const sessionDir = path.join(CONFIG.AUDIO_DIR, id);
+  let sessionDir;
+  try {
+    sessionDir = safeJoin(CONFIG.AUDIO_DIR, id);
+  } catch {
+    return interaction.editReply('Invalid session path.');
+  }
   if (!fs.existsSync(sessionDir)) return interaction.editReply('Session directory not found on disk.');
 
   const zipPath = path.join(CONFIG.AUDIO_DIR, 'exports', `${id}.zip`);

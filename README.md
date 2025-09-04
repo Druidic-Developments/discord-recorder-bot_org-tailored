@@ -31,9 +31,18 @@ This is a production‑ready Discord bot that records **one file per consenting 
    ```bash
    npm start
    ```
-5. **Invite the bot** with scopes `bot applications.commands` and permissions:
+5. **GUI launcher**
+   - `npm run gui` opens a desktop window that checks for Python/ffmpeg, guides the first‑time `.env` setup, lets you add extra guild IDs, open the recordings folder, or start the bot with live logs.
+6. **Invite the bot** with scopes `bot applications.commands` and permissions:
    - Connect, Speak, View Channels, Use Voice Activity
    - Manage Messages (for status), Attach Files (for export), Read Message History
+
+### Build a standalone Windows executable
+To create a self‑contained `.exe` of the GUI launcher:
+```bash
+npm run build:win
+```
+The packaged app will be written to `dist/`.
 
 ## Slash Commands
 - `/connect channel:<voice>` — Join a voice channel.

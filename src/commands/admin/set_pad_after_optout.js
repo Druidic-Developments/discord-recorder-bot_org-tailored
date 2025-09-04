@@ -7,6 +7,9 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
 
 export async function execute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: 'Admins only (Manage Guild required).', ephemeral: true });
+  }
   const enabled = interaction.options.getBoolean('enabled');
   interaction.client.config.PAD_AFTER_OPTOUT = enabled;
   await interaction.reply({ content: `pad_after_optout set to **${enabled}**`, ephemeral: true });

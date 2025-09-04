@@ -16,6 +16,7 @@ const commands = [];
 async function load(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const ent of entries) {
+    if (ent.name.startsWith('_')) continue;
     const p = path.join(dir, ent.name);
     if (ent.isDirectory()) {
       await load(p);

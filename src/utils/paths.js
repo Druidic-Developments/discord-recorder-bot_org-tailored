@@ -17,3 +17,12 @@ export function userFileName(sessionId, guildName, channelName, username, userId
   const safe = (s) => s.replace(/[^a-zA-Z0-9._-]+/g, '_').slice(0, 64);
   return `${tsToStamp()}-${safe(guildName)}-${safe(channelName)}-${safe(username)}-${userId}.${ext}`;
 }
+
+export function safeJoin(base, ...segments) {
+  const baseResolved = path.resolve(base);
+  const full = path.resolve(baseResolved, ...segments);
+  if (!full.startsWith(baseResolved + path.sep)) {
+    throw new Error('Attempted path traversal outside base directory');
+  }
+  return full;
+}

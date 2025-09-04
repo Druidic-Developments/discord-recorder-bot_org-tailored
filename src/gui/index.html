@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Discord Recorder</title>
+<style>
+body { font-family: sans-serif; margin: 1rem; }
+#log { height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 0.5rem; }
+button { margin-right: 0.5rem; }
+</style>
+</head>
+<body>
+<h1>Discord Recorder</h1>
+<button id="addGuild">Add Guild ID</button>
+<button id="openFolder">Open Recordings Folder</button>
+<button id="launchBot">Launch Bot</button>
+<pre id="log"></pre>
+<script>require('./renderer.js');</script>
+</body>
+</html>

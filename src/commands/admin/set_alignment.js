@@ -7,6 +7,9 @@ export const data = new SlashCommandBuilder()
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild);
 
 export async function execute(interaction) {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    return interaction.reply({ content: 'Admins only (Manage Guild required).', ephemeral: true });
+  }
   const mode = interaction.options.getString('mode');
   interaction.client.config.ALIGNMENT_MODE = mode;
   await interaction.reply({ content: `Alignment mode set to **${mode}**`, ephemeral: true });

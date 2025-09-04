@@ -12,7 +12,9 @@
     "dev": "node --watch src/bot.js",
     "register": "node register-commands-multi.js",
     "deps": "node src/tools/voice-deps-report.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gui": "electron src/gui/main.js",
+    "build:win": "npx electron-builder --win portable"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
@@ -28,6 +30,19 @@
     "prism-media": "^1.3.5"
   },
   "devDependencies": {
-    "vitest": "^2.0.5"
+      "vitest": "^2.0.5",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "org.discord.recorder",
+    "productName": "Discord Recorder",
+    "files": [
+      "package.json",
+      "src/**/*"
+    ],
+    "extraMetadata": {
+      "main": "src/gui/main.js"
+    }
   }
 }

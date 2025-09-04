@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
+import { CONFIG } from '../config.js';
 import { sha256OfString } from '../utils/hash.js';
 
 const DB_PATH = path.join('storage', 'recorder.sqlite3');
@@ -72,8 +73,12 @@ export const Track = {
     if (!ids.length) return 0;
     const marks = ids.map(()=>'?').join(',');
     const rows = db.prepare(`SELECT path FROM tracks WHERE session_id IN (${marks}) AND user_id=?`).all(...ids, userId);
+    const base = path.resolve(CONFIG.AUDIO_DIR);
     for (const row of rows) {
-      try { fs.unlinkSync(row.path); } catch {}
+      try {
+        const p = path.resolve(row.path);
+        if (p.startsWith(base + path.sep)) fs.unlinkSync(p);
+      } catch {}
     }
     db.prepare(`DELETE FROM tracks WHERE session_id IN (${marks}) AND user_id=?`).run(...ids, userId);
     return rows.length;
