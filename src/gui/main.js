@@ -1,7 +1,14 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { checkDependencies, needsSetup, saveCredentials, appendGuildId, openRecordingFolder, launchBot } from './setup.js';
+import {
+  checkDependencies,
+  loadSettings,
+  saveSettings,
+  openRecordingFolder,
+  launchBot,
+  fetchGuildSummaries
+} from './setup.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 let botProcess;
@@ -9,8 +16,10 @@ let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 960,
+    height: 680,
+    minWidth: 840,
+    minHeight: 600,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -24,22 +33,39 @@ app.whenReady().then(() => {
   setTimeout(checkDependencies, 0);
 });
 
-ipcMain.handle('check-setup', () => needsSetup());
-
-ipcMain.on('save-credentials', (e, creds) => {
-  saveCredentials(creds.token, creds.guild);
-  e.sender.send('log', '[Setup] .env created\n');
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
 
-ipcMain.on('add-guild', (e, id) => {
-  appendGuildId(id);
-  e.sender.send('log', `[Setup] Added guild ID ${id}\n`);
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  }
 });
 
-ipcMain.on('open-folder', (e) => {
+ipcMain.handle('load-settings', () => loadSettings());
+ipcMain.handle('save-settings', (_, settings) => saveSettings(settings));
+ipcMain.handle('choose-recording-folder', async (_, currentDir) => {
+  const settings = loadSettings();
+  const base = currentDir && currentDir.trim() ? currentDir : settings.audioDir;
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Recording Folder',
+    defaultPath: base,
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (result.canceled || !result.filePaths.length) return null;
+  const audioDir = result.filePaths[0];
+  saveSettings({ ...settings, audioDir });
+  return path.resolve(audioDir);
+});
+ipcMain.handle('open-folder', () => {
   const dir = openRecordingFolder();
   shell.openPath(dir);
+  return dir;
 });
+ipcMain.handle('fetch-guilds', (_, token) => fetchGuildSummaries(token));
 
 ipcMain.on('launch-bot', (e) => {
   if (botProcess) {
@@ -47,5 +73,13 @@ ipcMain.on('launch-bot', (e) => {
     return;
   }
   botProcess = launchBot((msg) => e.sender.send('log', msg));
-  botProcess.on('close', () => { botProcess = null; });
+   botProcess.on('close', () => {
+    botProcess = null;
+  });
+});
+
+ipcMain.on('stop-bot', () => {
+  if (botProcess) {
+    botProcess.kill();
+  }
 });

@@ -1,20 +1,387 @@
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8" />
-<title>Discord Recorder</title>
-<style>
-body { font-family: sans-serif; margin: 1rem; }
-#log { height: 300px; overflow-y: auto; background: #000; color: #0f0; padding: 0.5rem; }
-button { margin-right: 0.5rem; }
-</style>
-</head>
-<body>
-<h1>Discord Recorder</h1>
-<button id="addGuild">Add Guild ID</button>
-<button id="openFolder">Open Recordings Folder</button>
-<button id="launchBot">Launch Bot</button>
-<pre id="log"></pre>
-<script>require('./renderer.js');</script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Discord Recorder Control</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0f172a;
+        --bg-panel: #111d37;
+        --bg-muted: #1e2a47;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.15);
+        --text: #e2e8f0;
+        --text-muted: #94a3b8;
+        --border: rgba(148, 163, 184, 0.2);
+        font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--text);
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+      }
+
+      .app-shell {
+        display: flex;
+        flex-direction: column;
+        width: min(1100px, 96vw);
+        margin: 24px auto;
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(14px);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: 0 32px 60px rgba(15, 23, 42, 0.45);
+        overflow: hidden;
+      }
+
+      header {
+        padding: 24px 32px 16px;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(56, 189, 248, 0.05));
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+      }
+
+      header p {
+        margin: 8px 0 0;
+        color: var(--text-muted);
+      }
+
+      main {
+        padding: 24px 32px 0;
+        display: grid;
+        gap: 24px;
+      }
+
+      section {
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      section h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+      }
+
+      .fieldset {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        font-size: 13px;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 6px;
+        letter-spacing: 0.02em;
+      }
+
+      input[type='text'],
+      input[type='password'] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--bg-muted);
+        color: var(--text);
+        font-size: 14px;
+        transition: border 120ms ease;
+      }
+
+      input[type='text']:focus,
+      input[type='password']:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+
+      .guild-chip-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(148, 163, 184, 0.08);
+        border: 1px dashed rgba(148, 163, 184, 0.25);
+      }
+
+      .guild-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        background: rgba(56, 189, 248, 0.18);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      .guild-chip button {
+        background: transparent;
+        border: none;
+        color: var(--accent);
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      }
+
+      button.primary {
+        background: linear-gradient(135deg, #38bdf8, #2563eb);
+        color: #0b1120;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35);
+      }
+
+      button.secondary {
+        background: var(--bg-muted);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      button.ghost {
+        background: transparent;
+        color: var(--text-muted);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .folder-display {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .folder-display span {
+        flex: 1;
+        font-size: 14px;
+        padding: 10px 12px;
+        background: var(--bg-muted);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      thead {
+        background: rgba(148, 163, 184, 0.12);
+      }
+
+      tbody tr:nth-child(odd) {
+        background: rgba(15, 23, 42, 0.35);
+      }
+
+      tbody tr:hover {
+        background: rgba(56, 189, 248, 0.12);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .consent-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .consent-list span {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      #log {
+        background: #020617;
+        border-radius: 12px;
+        padding: 16px;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 13px;
+        color: #7dd3fc;
+        height: 200px;
+        overflow-y: auto;
+        border: 1px solid rgba(56, 189, 248, 0.2);
+      }
+
+      footer {
+        padding: 12px 32px 24px;
+        color: var(--text-muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+
+      .status-dot.online {
+        background: #22c55e;
+      }
+
+      .status-dot.offline {
+        background: #ef4444;
+      }
+
+      @media (max-width: 960px) {
+        .app-shell {
+          margin: 12px;
+        }
+
+        header,
+        main,
+        footer {
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header>
+        <h1>Discord Recorder Control Center</h1>
+        <p>Configure your bot, manage guild access, and launch recordings with confidence.</p>
+      </header>
+      <main>
+        <section id="configuration">
+          <h2>Bot Configuration</h2>
+          <div class="fieldset">
+            <div>
+              <label for="tokenInput">Bot Token</label>
+              <input id="tokenInput" type="password" placeholder="Paste your bot token" autocomplete="off" />
+            </div>
+            <div>
+              <label for="clientIdInput">Application (Client) ID</label>
+              <input id="clientIdInput" type="text" placeholder="Optional — used for command registration" />
+            </div>
+            <div>
+              <label>Authorized Guild IDs</label>
+              <div class="guild-chip-container" id="guildChipContainer"></div>
+              <div class="actions">
+                <input id="guildInput" type="text" placeholder="Add guild ID" style="flex: 1; min-width: 220px" />
+                <button id="addGuild" class="secondary" type="button">Add Guild</button>
+              </div>
+            </div>
+            <div>
+              <label>Recording Folder</label>
+              <div class="folder-display">
+                <span id="folderPath">Not set</span>
+                <button id="chooseFolder" class="secondary" type="button">Choose…</button>
+                <button id="openFolder" class="ghost" type="button">Open</button>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="saveSettings" class="primary" type="button">Save Settings</button>
+              <button id="refreshGuilds" class="secondary" type="button">Refresh Guild Overview</button>
+            </div>
+          </div>
+        </section>
+        <section id="guildOverview">
+          <h2>Guild Overview</h2>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 28%">Guild</th>
+                  <th style="width: 18%">Status</th>
+                  <th>Consenting Members</th>
+                </tr>
+              </thead>
+              <tbody id="guildTableBody">
+                <tr>
+                  <td colspan="3" style="text-align: center; padding: 24px; color: var(--text-muted)">No data yet. Refresh to load.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section id="controls">
+          <h2>Recorder Controls</h2>
+          <div class="actions">
+            <button id="launchBot" class="primary" type="button">Launch Recorder Bot</button>
+            <button id="stopBot" class="secondary" type="button">Stop Bot</button>
+          </div>
+          <div>
+            <label>Event Log</label>
+            <pre id="log"></pre>
+          </div>
+        </section>
+      </main>
+      <footer>
+        <span>Discord Recorder &mdash; Consent first, crystal clear audio.</span>
+        <span id="statusIndicator"><span class="status-dot offline"></span> Bot offline</span>
+      </footer>
+    </div>
+    <script>require('./renderer.js');</script>
+  </body>
 </html>
+src/gui/main.js

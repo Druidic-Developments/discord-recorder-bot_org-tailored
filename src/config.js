@@ -8,6 +8,11 @@ export const CONFIG = {
   TOKEN: process.env.DISCORD_TOKEN,
   CLIENT_ID: process.env.CLIENT_ID,
   GUILD_ID: process.env.GUILD_ID || null,
+  GUILD_IDS: (process.env.GUILD_IDS || process.env.GUILD_ID || '')
+    .split(/[ ,]+/)
+    .map((v) => v.trim())
+    .filter(Boolean),
+
 
   AUDIO_DIR: process.env.AUDIO_DIR || './recordings',
   RETENTION_DAYS: parseInt(process.env.RETENTION_DAYS || '30', 10),

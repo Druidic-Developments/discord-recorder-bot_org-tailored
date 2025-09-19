@@ -15,7 +15,8 @@ console.log('[Boot] Effective config:', {
   PAD_AFTER_OPTOUT: CONFIG.PAD_AFTER_OPTOUT,
   LOG_LEVEL: CONFIG.LOG_LEVEL,
   CLIENT_ID: CONFIG.CLIENT_ID,
-  GUILD_ID: CONFIG.GUILD_ID ?? 'none'
+  GUILD_ID: CONFIG.GUILD_ID ?? 'none',
+  GUILD_IDS: CONFIG.GUILD_IDS
 });
 
 ensureDirs();

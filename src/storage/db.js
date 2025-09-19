@@ -43,6 +43,17 @@ export const Consent = {
   },
   deleteUser(userId, guildId) {
     db.prepare('DELETE FROM consents WHERE user_id=? AND guild_id=?').run(userId, guildId);
+    },
+  listByGuild(guildId) {
+    return db
+      .prepare('SELECT user_id, updated_at FROM consents WHERE guild_id=? AND consent=1 ORDER BY updated_at DESC')
+      .all(guildId);
+  },
+  listGuilds() {
+    return db
+      .prepare('SELECT DISTINCT guild_id FROM consents WHERE consent=1 ORDER BY guild_id ASC')
+      .all()
+      .map((row) => row.guild_id);
   }
 };
 
