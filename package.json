@@ -15,7 +15,8 @@
     "deps": "node src/tools/voice-deps-report.js",
     "test": "vitest run",
     "gui": "electron src/gui/main.js",
-    "build:win": "npx electron-builder --win portable"
+    "build:win": "npx electron-builder --win portable",
+    "package:release": "node scripts/package-release.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",

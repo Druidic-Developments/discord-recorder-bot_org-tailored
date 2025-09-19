@@ -2,3 +2,5 @@ node_modules/
 storage/recorder.sqlite3*
 recordings/
 .env
+dist/
+release/
